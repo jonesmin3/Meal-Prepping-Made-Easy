@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MealPrep AI — plan dinner for the week</title>
+<link rel="stylesheet" href="/style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>" />
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="/">
+    <span class="brand-mark">🍲</span>
+    <span>MealPrep <em>AI</em></span>
+  </a>
+  <p class="tagline">Dinner planned for the whole week, in two questions.</p>
+</header>
+
+<main id="app">
+
+  <!-- ══════════════════════════════ STEP 1 — CUISINE ══════════════════════════════ -->
+  <section class="step is-active" id="step-cuisine" aria-labelledby="cuisine-h">
+    <div class="step-head">
+      <span class="step-num">1</span>
+      <div>
+        <h1 id="cuisine-h">What kind of dinner are you in the mood for?</h1>
+        <p class="step-sub">Pick a cuisine, or type your own.</p>
+      </div>
+    </div>
+
+    <div class="chips" id="cuisine-chips" role="group" aria-label="Cuisine choices"></div>
+
+    <div class="custom-row">
+      <label class="sr-only" for="cuisine-custom">Your own cuisine</label>
+      <input id="cuisine-custom" type="text" autocomplete="off"
+             placeholder="Or type it — e.g. Korean, Ethiopian, Tex-Mex…" />
+      <button class="btn btn-ghost" id="cuisine-use-custom" type="button">Use this</button>
+    </div>
+
+    <div class="step-foot">
+      <button class="btn btn-primary" id="to-servings" disabled>Next — how many people?</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ STEP 2 — SERVINGS ══════════════════════════════ -->
+  <section class="step" id="step-servings" aria-labelledby="servings-h" hidden>
+    <div class="step-head">
+      <span class="step-num">2</span>
+      <div>
+        <h1 id="servings-h">How many people are you prepping for?</h1>
+        <p class="step-sub" id="servings-context"></p>
+      </div>
+    </div>
+
+    <div class="counter">
+      <button class="counter-btn" id="minus" type="button" aria-label="Fewer people">−</button>
+      <div class="counter-value">
+        <input id="servings" type="number" min="1" max="20" value="4" inputmode="numeric" />
+        <span class="counter-unit" id="servings-unit">people</span>
+      </div>
+      <button class="counter-btn" id="plus" type="button" aria-label="More people">+</button>
+    </div>
+
+    <div class="quick-picks" id="serving-presets" role="group" aria-label="Common serving sizes"></div>
+
+    <p class="hint" id="servings-hint">Every ingredient list gets rescaled to this number.</p>
+
+    <div class="step-foot split">
+      <button class="btn btn-ghost" id="back-cuisine" type="button">← Back</button>
+      <button class="btn btn-primary" id="find-recipes" type="button">Find recipes →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ LOADING ══════════════════════════════ -->
+  <section class="step loading-step" id="step-loading" hidden>
+    <div class="loader">
+      <div class="pot">
+        <span class="steam s1"></span><span class="steam s2"></span><span class="steam s3"></span>
+      </div>
+      <h2 id="loading-title">Searching for the best-rated recipes…</h2>
+      <p class="step-sub" id="loading-sub">Filtering to 4.5★ and above, then scaling for you.</p>
+      <ul class="loading-list" id="loading-list"></ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ STEP 3 — RESULTS ══════════════════════════════ -->
+  <section class="step step-wide" id="step-results" aria-labelledby="results-h" hidden>
+    <div class="results-bar">
+      <div>
+        <h1 id="results-h">Pick tonight's plan</h1>
+        <p class="step-sub" id="results-context"></p>
+      </div>
+      <div class="results-actions">
+        <span class="badge badge-star" id="rating-badge">★ 4.5 and up only</span>
+        <button class="btn btn-ghost" id="refresh" type="button">↻ Refresh — find new ones</button>
+      </div>
+    </div>
+
+    <div class="grid" id="recipe-grid"></div>
+
+    <div class="step-foot split">
+      <button class="btn btn-ghost" id="back-servings" type="button">← Change servings</button>
+      <p class="micro" id="results-note"></p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ STEP 4 — RECIPE DETAIL ══════════════════════════════ -->
+  <section class="step step-wide" id="step-detail" aria-labelledby="detail-h" hidden>
+    <button class="btn btn-ghost back-link" id="back-results" type="button">← All recipes</button>
+
+    <div class="detail-head">
+      <div class="detail-photo">
+        <img id="detail-img" alt="" />
+        <p class="photo-credit" id="detail-credit"></p>
+      </div>
+      <div class="detail-meta">
+        <h1 id="detail-h">Recipe</h1>
+        <div class="meta-row" id="detail-badges"></div>
+        <p class="detail-verdict" id="detail-verdict"></p>
+        <p class="detail-summary" id="detail-summary"></p>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <aside class="panel ingredients-panel">
+        <h2>🛒 Ingredients</h2>
+        <p class="panel-sub" id="ingredients-sub"></p>
+        <div id="ingredients"></div>
+      </aside>
+
+      <div class="panel method-panel">
+        <h2>👩‍🍳 Instructions</h2>
+        <p class="panel-sub" id="method-sub"></p>
+        <ol id="steps" class="steps"></ol>
+        <div class="storage" id="storage"></div>
+      </div>
+    </div>
+
+    <div class="step-foot split">
+      <button class="btn btn-ghost" id="detail-refresh" type="button">↻ Not this one — new ideas</button>
+      <button class="btn btn-ghost" id="detail-back" type="button">← Back to results</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ ERROR ══════════════════════════════ -->
+  <section class="step" id="step-error" hidden>
+    <div class="error-card">
+      <span class="error-mark">⚠︎</span>
+      <h2>That didn't come back</h2>
+      <p id="error-text"></p>
+      <div class="step-foot split">
+        <button class="btn btn-ghost" id="error-back" type="button">← Back</button>
+        <button class="btn btn-primary" id="error-retry" type="button">Try again</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Ratings and recipe text come from AI research over public recipe articles and can be
+     wrong — opening the source page is still the last word. Photo credits are shown under
+     each suggested picture.</p>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>
